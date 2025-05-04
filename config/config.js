@@ -8,7 +8,8 @@ module.exports = {
     
     // Email configuration (for nodemailer)
     emailFrom: process.env.EMAIL_FROM,
-    emailService: process.env.EMAIL_SERVICE, // e.g., 'gmail'
+    emailHost: process.env.EMAIL_HOST, // Added
+    emailPort: process.env.EMAIL_PORT, // Added
     emailUser: process.env.EMAIL_USER,
     emailPass: process.env.EMAIL_PASS,
     

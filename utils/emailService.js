@@ -5,7 +5,9 @@ const config = require('../config/config');
  * Initialize nodemailer transporter
  */
 const transporter = nodemailer.createTransport({
-  service: config.emailService,
+  host: config.emailHost, // Use explicit host
+  port: config.emailPort, // Use explicit port
+  secure: config.emailPort == 465, // true for 465, false for other ports (like 587 which uses STARTTLS)
   auth: {
     user: config.emailUser,
     pass: config.emailPass
@@ -23,9 +25,9 @@ exports.sendResetPasswordCode = async (to, name, resetCode) => {
   try {
     // Email options
     const mailOptions = {
-      from: `"Authentication App" <${config.emailFrom}>`,
+      from: `"Precure" <${config.emailFrom}>`,
       to,
-      subject: 'Password Reset Code',
+      subject: 'Precure Reset Password',
       html: `
         <h1>Password Reset</h1>
         <p>Hello ${name},</p>
@@ -34,7 +36,7 @@ exports.sendResetPasswordCode = async (to, name, resetCode) => {
         <p>This code will expire in 10 minutes.</p>
         <p>If you didn't request a password reset, please ignore this email.</p>
         <p>Thank you,</p>
-        <p>Authentication App Team</p>
+        <p>Precure Team</p>
       `
     };
     
