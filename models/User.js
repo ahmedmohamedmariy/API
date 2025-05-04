@@ -1,9 +1,15 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid'); // Import uuid
 const config = require('../config/config');
 
 const UserSchema = new mongoose.Schema({
+  id: { // Add the new id field
+    type: String,
+    unique: true,
+    select: false // Don't return id in queries by default
+  },
   name: {
     type: String,
     required: [true, 'Please provide a name'],
@@ -51,19 +57,24 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-// Hash password before saving
+// Generate ID and hash password/ID before saving
 UserSchema.pre('save', async function(next) {
-  // Only hash the password if it's modified (or new)
-  if (!this.isModified('password')) {
-    return next();
-  }
-  
   try {
-    // Generate salt
+    // Generate salt once for both hashing operations
     const salt = await bcrypt.genSalt(10);
+
+    // Generate and hash ID if it's a new document
+    if (this.isNew) {
+      const rawId = uuidv4(); // Generate UUID
+      this.id = await bcrypt.hash(rawId, salt); // Hash the generated ID
+    }
+
+    // Only hash the password if it's modified (or new)
+    if (this.isModified('password')) {
+      // Hash password with the same salt
+      this.password = await bcrypt.hash(this.password, salt);
+    }
     
-    // Hash password with salt
-    this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
     next(error);

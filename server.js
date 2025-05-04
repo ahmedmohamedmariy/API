@@ -1,6 +1,9 @@
+const dotenv = require('dotenv');
+// Load environment variables FIRST
+dotenv.config();
+
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const { connectDB } = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
@@ -13,9 +16,6 @@ const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const passwordRoutes = require('./routes/passwordRoutes');
 const testRoutes = require('./routes/testRoutes');
-
-// Load environment variables
-dotenv.config();
 
 // Initialize express
 const app = express();
