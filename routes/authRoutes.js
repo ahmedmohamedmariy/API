@@ -3,9 +3,12 @@ const router = express.Router();
 const {
   signup,
   login,
+  logout,
   forgotPassword,
   resetPassword,
-  getCurrentUser
+  getCurrentUser,
+  updateProfile,
+  changePassword
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const {
@@ -13,6 +16,8 @@ const {
   validateLogin,
   validateForgotPassword,
   validateResetPassword,
+  validateUpdateProfile,
+  validateChangePassword, // Added validateChangePassword
   handleValidationErrors
 } = require('../utils/validators');
 
@@ -23,6 +28,10 @@ router.post('/forgot-password', validateForgotPassword, handleValidationErrors, 
 router.post('/reset-password', validateResetPassword, handleValidationErrors, resetPassword);
 
 // Protected routes
-router.get('/me', protect, getCurrentUser);
+router.get('/profile', protect, getCurrentUser);
+router.put('/profile', protect, validateUpdateProfile, handleValidationErrors, updateProfile);
+router.put('/change-password', protect, validateChangePassword, handleValidationErrors, changePassword);
+router.post('/logout', protect, logout);
+
 
 module.exports = router;

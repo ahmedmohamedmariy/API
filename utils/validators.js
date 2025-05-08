@@ -121,6 +121,16 @@ exports.validateChangePassword = [
     })
 ];
 
+exports.validateProfile = [
+  check('name')
+    .trim()
+    .notEmpty().withMessage('Name is required')
+    .isLength({ max: 20 }).withMessage('Name cannot be more than 20 characters'),
+    
+  check('emergencyPhone')
+    .notEmpty().withMessage('Emergency phone is required')
+    .matches(/^\+?[0-9]{10,15}$/).withMessage('Please provide a valid phone number')
+];
 /**
  * Middleware to handle validation errors
  */

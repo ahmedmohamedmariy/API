@@ -41,6 +41,14 @@ exports.protect = async (req, res, next) => {
       });
     }
     
+    // Check if token is blacklisted
+    if (user.blacklistedTokens && user.blacklistedTokens.some(t => t.token === token)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been invalidated. Please login again.'
+      });
+    }
+    
     // Attach user to request object
     req.user = user;
     next();

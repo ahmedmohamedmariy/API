@@ -51,6 +51,72 @@ exports.signup = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Logout user
+ * @route   POST /api/auth/logout
+ * @access  Private
+ */
+exports.logout = asyncHandler(async (req, res) => {
+  try {
+    // Get the token from the authorization header
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+    
+    // Blacklist the token
+    // Note: This assumes you have a BlacklistedToken model
+    // If not, you would need to create one with fields for the token and an expiry date
+    
+    // Implementation option 1: Using a BlacklistedToken model
+    // await BlacklistedToken.create({ 
+    //   token, 
+    //   expiresAt: new Date(/* token expiry time */) 
+    // });
+    
+    // Implementation option 2: Store in user document
+    // Find the user and update their tokens array
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Initialize blacklistedTokens array if it doesn't exist
+    if (!user.blacklistedTokens) {
+      user.blacklistedTokens = [];
+    }
+    
+    // Add the current token to the blacklisted tokens
+    user.blacklistedTokens.push({
+      token,
+      createdAt: new Date()
+    });
+    
+    // Save the user with the updated blacklisted tokens
+    await user.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully, token invalidated'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout'
+    });
+  }
+});
+
+/**
  * @desc    Login user
  * @route   POST /api/auth/login
  * @access  Public
@@ -106,6 +172,47 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Update user profile
+ * @route   PUT /api/auth/profile
+ * @access  Private
+ */
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const { name, emergencyPhone } = req.body;
+  const userId = req.user._id;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found',
+    });
+  }
+
+  if (name) {
+    user.name = name;
+  }
+
+  if (emergencyPhone) {
+    user.emergencyPhone = emergencyPhone;
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile updated successfully',
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      emergencyPhone: user.emergencyPhone,
+      profileImage: user.profileImage,
+    },
+  });
+});
 
 /**
  * @desc    Forgot password - Send reset code
@@ -239,3 +346,49 @@ exports.getCurrentUser = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Change user password
+ * @route   PUT /api/auth/change-password
+ * @access  Private
+ */
+exports.changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword, confirmNewPassword } = req.body;
+  const userId = req.user._id;
+
+  // Find user by ID and include password field
+  const user = await User.findById(userId).select('+password');
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found',
+    });
+  }
+
+  // Verify old password
+  const isMatch = await user.matchPassword(oldPassword);
+  if (!isMatch) {
+    return res.status(400).json({
+      success: false,
+      message: 'Current password is incorrect',
+    });
+  }
+
+  // Check if new password matches confirm password
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'New password and confirm password do not match',
+    });
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Password changed successfully',
+  });
+});

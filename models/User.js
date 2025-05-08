@@ -51,6 +51,18 @@ const UserSchema = new mongoose.Schema({
     expiresAt: Date
   },
   
+  blacklistedTokens: [{
+    token: {
+      type: String,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      expires: '7d' // Automatically remove entries after 7 days
+    }
+  }],
+  
   createdAt: {
     type: Date,
     default: Date.now
